@@ -1,0 +1,72 @@
+%% 初始化工作空间
+clc
+clear all
+close all
+
+%% 载入数据
+load karate1
+load members
+
+%% 二维数据
+
+% 散点图(真实标记)
+figure;
+membersNum = grp2idx(members);
+gscatter(karate1(:,1),karate1(:,2),membersNum,['r','b'])
+xlabel('特征值1')
+ylabel('特征值2')
+title('真实标记')
+set(gca,'FontSize',12)
+set(gca,'FontWeight','bold')
+
+% 散点图（无标记）
+figure;
+scatter(karate1(:,1),karate1(:,2),150,'.')
+xlabel('特征值1')
+ylabel('特征值2')
+title('无标记')
+set(gca,'FontSize',12)
+set(gca,'FontWeight','bold')
+%% kmeans 聚类
+data=[karate1(:,1), karate1(:,2)];
+K=2;
+[idx,cen]=kmeans(data,K,'Distance','sqeuclidean','Replicates',10,'Display','Final');
+% 调整标号
+dist=sum(cen.^2,2);
+[dump,sortind]=sort(dist,'ascend');
+newidx=zeros(size(idx));
+for i =1:K
+    newidx(idx==i)=find(sortind==i);
+end
+
+% 散点图(kmeans分类)
+figure;
+gscatter(data(:,1),data(:,2),newidx,['r','b'])
+hold on
+scatter(cen(:,1),cen(:,2),300,'m*')
+hold off
+xlabel('特征值1')
+ylabel('特征值2')
+title('kmeans分类')
+set(gca,'FontSize',12)
+set(gca,'FontWeight','bold')
+
+% 散点图(真实标记:实心圆+kmeans分类:圈)
+figure;
+gscatter(karate1(:,1),karate1(:,2),membersNum,['r','b'])
+hold on
+gscatter(data(:,1),data(:,2),newidx,['r','b'],'o',10)
+scatter(cen(:,1),cen(:,2),300,'m*')
+hold off
+xlabel('特征值1')
+ylabel('特征值2')
+title('真实标记:实心圆+kmeans分类:圈')
+set(gca,'FontSize',12)
+set(gca,'FontWeight','bold')
+
+%% 混淆矩阵 ConfusionMatrix
+confMat=confusionmat(membersNum,newidx)
+error12=membersNum==2&newidx==1;
+errDat12=data(error12,:)
+error21=membersNum==1&newidx==2;
+errDat21=data(error21,:)
